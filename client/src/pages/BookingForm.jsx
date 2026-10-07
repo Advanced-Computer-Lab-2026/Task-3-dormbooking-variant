@@ -17,19 +17,23 @@ export default function BookingForm() {
   // TODO (edit mode): when there is an `id`, load the booking and fill the form.
   useEffect(() => {
     if (!id) return
-    
-    async function loadBooking(){
-      try{
-        const {data} = await api.get(`/bookings/${id}`)
+
+    async function loadBooking() {
+      try {
+        const { data } = await api.get(`/bookings/${id}`)
 
         setForm({
-          roomNumber: data.roomNumber,
-          startDate: data.startDate.slice(0,10),
-          endDate: data.endDate.slice(0,10),
-          purpose: data.purpose || '',
+          roomNumber: data.booking.roomNumber,
+          startDate: data.booking.startDate.slice(0, 10),
+          endDate: data.booking.endDate.slice(0, 10),
+          purpose: data.booking.purpose || '',
         })
-      } catch (err){
-        setError(err.response?.data?.message || 'Failed to load booking')
+      } catch (err) {
+        setError(
+          err.response?.data?.message ||
+          err.message ||
+          'Failed to load booking'
+        )
       }
     }
 
