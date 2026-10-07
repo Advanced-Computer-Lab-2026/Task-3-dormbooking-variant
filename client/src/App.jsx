@@ -32,11 +32,13 @@ export default function App() {
       </nav>
 
       <Routes>
+        {/* Redirect to /bookings if the user is logged in, otherwise show the login page */}
         <Route path="/" element={<Navigate to="/bookings" />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/bookings" element={<Bookings />} />
         <Route path="/bookings/new" element={
+          // Protect the booking form route so that only logged-in users can access it
           <ProtectedRoute><BookingForm /></ProtectedRoute>
         } />
         <Route path="/bookings/:id" element={
