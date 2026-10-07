@@ -13,8 +13,16 @@ export default function App() {
       <nav className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <Link to="/" className="font-semibold">Dorm Room Booking</Link>
-          <Link to="/bookings" className="text-sm">Bookings</Link>
-          {user && <Link to="/bookings/new" className="text-sm">Book a Room</Link>}
+          {user && (
+  <Link to="/bookings/new" className="btn text-sm">
+    bookings
+  </Link>
+)}
+          {user && (
+  <Link to="/bookings/new" className="btn text-sm">
+    Book a Room
+  </Link>
+)}
         </div>
         <div className="flex items-center gap-2">
           {!user ? (
