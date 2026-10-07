@@ -2,11 +2,17 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api'
 
-// TODO: build the Book a Room page — see README.md "Your task".
-// This page is already routed at /bookings/new (book) and /bookings/:id (edit),
-// and both routes are wrapped in <ProtectedRoute>.
-
 const defaults = { roomNumber: '', startDate: '', endDate: '', purpose: '' }
+
+function toInputDate(value) {
+  if (!value) return ''
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+  return local.toISOString().slice(0, 10)
+}
 
 export default function BookingForm() {
   const nav = useNavigate()
@@ -14,30 +20,94 @@ export default function BookingForm() {
   const [form, setForm] = useState(defaults)
   const [error, setError] = useState('')
 
-  // TODO (edit mode): when there is an `id`, load the booking and fill the form.
   useEffect(() => {
     if (!id) return
-    // TODO
+
+    async function loadBooking() {
+      try {
+        const { data } = await api.get(`/bookings/${id}`)
+        const booking = data.booking
+
+        setForm({
+          roomNumber: booking.roomNumber || '',
+          startDate: toInputDate(booking.startDate),
+          endDate: toInputDate(booking.endDate),
+          purpose: booking.purpose || ''
+        })
+      } catch (err) {
+        setError(err?.response?.data?.message || 'Failed to load booking')
+      }
+    }
+
+    loadBooking()
   }, [id])
 
-  // TODO: update `form` when an input changes.
   function onChange(e) {
-    // TODO
+    const { name, value } = e.target
+    setForm(prev => ({ ...prev, [name]: value }))
   }
 
-  // TODO: POST a new booking, or PATCH the existing one when editing,
-  // then go back to /bookings. Show the server's error message on failure.
   async function onSubmit(e) {
     e.preventDefault()
     setError('')
-    // TODO
+
+    try {
+      const payload = {
+        roomNumber: form.roomNumber,
+        startDate: form.startDate,
+        endDate: form.endDate,
+        purpose: form.purpose
+      }
+
+      if (id) {
+        await api.patch(`/bookings/${id}`, payload)
+      } else {
+        await api.post('/bookings', payload)
+      }
+
+      nav('/bookings')
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Save failed')
+    }
   }
 
   return (
     <div className="max-w-lg mx-auto card">
       <h1 className="text-xl font-semibold mb-4">{id ? 'Edit' : 'New'} Booking</h1>
       <form onSubmit={onSubmit} className="space-y-3">
-        {/* TODO: room number input, start/end date inputs and purpose textarea */}
+        <input
+          className="input"
+          name="roomNumber"
+          placeholder="Room number"
+          value={form.roomNumber}
+          onChange={onChange}
+        />
+
+        <input
+          className="input"
+          type="date"
+          name="startDate"
+          value={form.startDate}
+          onChange={onChange}
+        />
+
+        <input
+          className="input"
+          type="date"
+          name="endDate"
+          value={form.endDate}
+          onChange={onChange}
+        />
+
+        <textarea
+          className="input"
+          name="purpose"
+          placeholder="Purpose (optional)"
+          value={form.purpose}
+          onChange={onChange}
+          rows={4}
+        />
+
         {error && <div className="text-red-600 text-sm">{error}</div>}
         <button className="btn" type="submit">Save</button>
       </form>
