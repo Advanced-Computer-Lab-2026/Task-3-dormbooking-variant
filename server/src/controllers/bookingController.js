@@ -36,7 +36,7 @@ export async function getBooking(req, res, next) {
   try {
     const booking = await Booking.findById(req.params.id).populate('bookedBy', 'name email');
     if (!booking) return res.status(404).json({ message: 'Booking not found' });
-    res.json({ booking });
+    res.json(booking);
   } catch (err) { next(err); }
 }
 
