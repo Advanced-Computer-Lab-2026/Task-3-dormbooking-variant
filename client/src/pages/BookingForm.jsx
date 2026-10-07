@@ -2,44 +2,144 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api'
 
-// TODO: build the Book a Room page — see README.md "Your task".
-// This page is already routed at /bookings/new (book) and /bookings/:id (edit),
-// and both routes are wrapped in <ProtectedRoute>.
-
-const defaults = { roomNumber: '', startDate: '', endDate: '', purpose: '' }
+const defaults = {
+  roomNumber: '',
+  startDate: '',
+  endDate: '',
+  purpose: ''
+}
 
 export default function BookingForm() {
   const nav = useNavigate()
   const { id } = useParams()
+
   const [form, setForm] = useState(defaults)
   const [error, setError] = useState('')
 
-  // TODO (edit mode): when there is an `id`, load the booking and fill the form.
   useEffect(() => {
     if (!id) return
-    // TODO
+
+    async function loadBooking() {
+      try {
+        const response = await api.get(`/bookings/${id}`)
+        const booking = response.data.booking
+
+        setForm({
+          roomNumber: booking.roomNumber || '',
+          startDate: booking.startDate
+            ? booking.startDate.slice(0, 10)
+            : '',
+          endDate: booking.endDate
+            ? booking.endDate.slice(0, 10)
+            : '',
+          purpose: booking.purpose || ''
+        })
+      } catch (err) {
+        setError(
+          err.response?.data?.message ||
+          'Failed to load booking'
+        )
+      }
+    }
+
+    loadBooking()
   }, [id])
 
-  // TODO: update `form` when an input changes.
   function onChange(e) {
-    // TODO
+    const { name, value } = e.target
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: value
+    }))
   }
 
-  // TODO: POST a new booking, or PATCH the existing one when editing,
-  // then go back to /bookings. Show the server's error message on failure.
   async function onSubmit(e) {
     e.preventDefault()
     setError('')
-    // TODO
+
+    try {
+      if (id) {
+        await api.patch(`/bookings/${id}`, form)
+      } else {
+        await api.post('/bookings', form)
+      }
+
+      nav('/bookings')
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+        'Something went wrong'
+      )
+    }
   }
 
   return (
     <div className="max-w-lg mx-auto card">
-      <h1 className="text-xl font-semibold mb-4">{id ? 'Edit' : 'New'} Booking</h1>
+      <h1 className="text-xl font-semibold mb-4">
+        {id ? 'Edit' : 'New'} Booking
+      </h1>
+
       <form onSubmit={onSubmit} className="space-y-3">
-        {/* TODO: room number input, start/end date inputs and purpose textarea */}
-        {error && <div className="text-red-600 text-sm">{error}</div>}
-        <button className="btn" type="submit">Save</button>
+
+        <input
+          className="input"
+          name="roomNumber"
+          type="text"
+          placeholder="Room number"
+          value={form.roomNumber}
+          onChange={onChange}
+          required
+        />
+
+        <label className="block">
+          <span className="text-sm">Start date</span>
+
+          <input
+            className="input"
+            name="startDate"
+            type="date"
+            value={form.startDate}
+            onChange={onChange}
+            required
+          />
+        </label>
+
+        <label className="block">
+          <span className="text-sm">End date</span>
+
+          <input
+            className="input"
+            name="endDate"
+            type="date"
+            value={form.endDate}
+            onChange={onChange}
+            required
+          />
+        </label>
+
+        <textarea
+          className="input"
+          name="purpose"
+          placeholder="Purpose (optional)"
+          value={form.purpose}
+          onChange={onChange}
+          rows="4"
+        />
+
+        {error && (
+          <div className="text-red-600 text-sm">
+            {error}
+          </div>
+        )}
+
+        <button
+          className="btn"
+          type="submit"
+        >
+          Save
+        </button>
+
       </form>
     </div>
   )
