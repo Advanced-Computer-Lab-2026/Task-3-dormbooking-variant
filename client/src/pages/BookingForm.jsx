@@ -29,10 +29,10 @@ export default function BookingForm() {
         if (ignore) return
 
         setForm({
-          roomNumber: data.roomNumber,
-          startDate: data.startDate.slice(0, 10),
-          endDate: data.endDate.slice(0, 10),
-          purpose: data.purpose ?? ''
+          roomNumber: data.booking.roomNumber,
+          startDate: data.booking.startDate.slice(0, 10),
+          endDate: data.booking.endDate.slice(0, 10),
+          purpose: data.booking.purpose ?? ''
         })
       } catch (err) {
         if (!ignore) {
