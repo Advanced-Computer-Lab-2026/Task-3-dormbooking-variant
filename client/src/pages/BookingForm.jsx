@@ -20,7 +20,7 @@ export default function BookingForm() {
     
     async function loadBooking(){
       try{
-        const {data} = await api.get('/bookings/${id}')
+        const {data} = await api.get(`/bookings/${id}`)
 
         setForm({
           roomNumber: data.roomNumber,
@@ -61,7 +61,7 @@ export default function BookingForm() {
       }
 
       if (id) {
-        await api.patch('/bookings/${id}', bookingData)
+        await api.patch(`/bookings/${id}`, bookingData)
       } else {
         await api.post('/bookings', bookingData)
       }
