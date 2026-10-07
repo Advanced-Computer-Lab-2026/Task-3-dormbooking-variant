@@ -4,7 +4,8 @@ import { api } from '../api'
 import { useAuth } from '../hooks/useAuth'
 
 function formatDate(d) {
-  return new Date(d).toLocaleDateString()
+  // dates are stored as UTC midnight; formatting in local time shows the previous day west of UTC
+  return new Date(d).toLocaleDateString(undefined, { timeZone: 'UTC' })
 }
 
 export default function Bookings() {
@@ -13,8 +14,12 @@ export default function Bookings() {
   const [error, setError] = useState('')
 
   async function load() {
-    const res = await api.get('/bookings')
-    setBookings(res.data.bookings)
+    try {
+      const res = await api.get('/bookings')
+      setBookings(res.data.bookings)
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Could not load bookings')
+    }
   }
 
   useEffect(() => { load() }, [])
