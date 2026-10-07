@@ -16,13 +16,33 @@ export default function BookingForm() {
 
   // TODO (edit mode): when there is an `id`, load the booking and fill the form.
   useEffect(() => {
-    if (!id) return
-    // TODO
+    if (!id) {
+      setForm(defaults)
+      return
+    }
+
+    async function load() {
+      try {
+        const res = await api.get(`/bookings/${id}`)
+        const b = res.data.booking
+        setForm({
+          roomNumber: b.roomNumber || '',
+          startDate: b.startDate ? b.startDate.slice(0, 10) : '',
+          endDate: b.endDate ? b.endDate.slice(0, 10) : '',
+          purpose: b.purpose || ''
+        })
+      } catch (err) {
+        setError(err?.response?.data?.message || 'Failed to load booking')
+      }
+    }
+
+    load()
   }, [id])
 
   // TODO: update `form` when an input changes.
   function onChange(e) {
-    // TODO
+    const { name, value } = e.target
+    setForm(prev => ({ ...prev, [name]: value }))
   }
 
   // TODO: POST a new booking, or PATCH the existing one when editing,
@@ -30,14 +50,66 @@ export default function BookingForm() {
   async function onSubmit(e) {
     e.preventDefault()
     setError('')
-    // TODO
+    try {
+      const payload = {
+        roomNumber: form.roomNumber,
+        startDate: form.startDate,
+        endDate: form.endDate,
+        purpose: form.purpose
+      }
+      if (id) {
+        await api.patch(`/bookings/${id}`, payload)
+      } else {
+        await api.post('/bookings', payload)
+      }
+      nav('/bookings')
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Failed to save booking')
+    }
   }
 
   return (
     <div className="max-w-lg mx-auto card">
       <h1 className="text-xl font-semibold mb-4">{id ? 'Edit' : 'New'} Booking</h1>
       <form onSubmit={onSubmit} className="space-y-3">
-        {/* TODO: room number input, start/end date inputs and purpose textarea */}
+        <input
+          className="input"
+          type="text"
+          name="roomNumber"
+          placeholder="Room number (e.g. B2-104)"
+          value={form.roomNumber}
+          onChange={onChange}
+        />
+        <div>
+          <label htmlFor="startDate" className="block text-sm mb-1">Start date</label>
+          <input
+            id="startDate"
+            className="input"
+            type="date"
+            name="startDate"
+            value={form.startDate}
+            onChange={onChange}
+          />
+        </div>
+        <div>
+          <label htmlFor="endDate" className="block text-sm mb-1">End date</label>
+          <input
+            id="endDate"
+            className="input"
+            type="date"
+            name="endDate"
+            value={form.endDate}
+            onChange={onChange}
+          />
+        </div>
+        <textarea
+          className="input"
+          name="purpose"
+          placeholder="Purpose (optional)"
+          value={form.purpose}
+          onChange={onChange}
+          rows={3}
+        />
         {error && <div className="text-red-600 text-sm">{error}</div>}
         <button className="btn" type="submit">Save</button>
       </form>
