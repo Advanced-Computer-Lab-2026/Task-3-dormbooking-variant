@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Book a Room — Test Results</title>
+<style>
+  :root {
+    --bg: #fafafa; --card: #ffffff; --text: #18181b; --muted: #52525b;
+    --border: #e4e4e7; --pass: #15803d; --pass-bg: #dcfce7; --code: #f4f4f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #09090b; --card: #18181b; --text: #f4f4f5; --muted: #a1a1aa;
+            --border: #27272a; --pass: #4ade80; --pass-bg: #14532d; --code: #27272a; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 900px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 26px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 36px 0 12px; }
+  .sub { color: var(--muted); margin: 0 0 20px; }
+  .banner { display: flex; align-items: center; gap: 12px; padding: 14px 18px;
+            border-radius: 12px; background: var(--pass-bg); color: var(--pass); font-weight: 600; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 16px; }
+  .stat { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+  .stat b { display: block; font-size: 24px; }
+  .stat span { color: var(--muted); font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; background: var(--card);
+          border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-size: 13px; color: var(--muted); font-weight: 600; }
+  tr:last-child td { border-bottom: 0; }
+  .ok { color: var(--pass); font-weight: 600; white-space: nowrap; }
+  code { background: var(--code); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+  .wrap { overflow-x: auto; }
+  figure { margin: 0; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+  figure img { width: 100%; height: auto; border-radius: 8px; display: block; }
+  figcaption { color: var(--muted); font-size: 13px; margin-top: 8px; }
+  ul { padding-left: 20px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Dorm Room Booking — Book a Room page</h1>
+  <p class="sub">Verification run: 7 Oct 2026 · API on <code>localhost:4000</code>, client on <code>localhost:5175</code>, MongoDB Atlas connected</p>
+
+  <div class="banner">✓ All checks passed: 15 API checks and 9 browser checks</div>
+
+  <div class="stats">
+    <div class="stat"><b>3 / 3</b><span>README TODOs done</span></div>
+    <div class="stat"><b>15 / 15</b><span>API checks passed</span></div>
+    <div class="stat"><b>9 / 9</b><span>Browser checks passed</span></div>
+    <div class="stat"><b>✓</b><span>Production build (<code>vite build</code>)</span></div>
+  </div>
+
+  <h2>Requirements</h2>
+  <div class="wrap"><table>
+    <tr><th>Requirement</th><th>Implementation</th><th>Status</th></tr>
+    <tr><td>TODO 1 — form</td><td><code>roomNumber</code> text input, <code>startDate</code>/<code>endDate</code> date inputs, <code>purpose</code> textarea; one <code>onChange</code> updates <code>form[e.target.name]</code></td><td class="ok">✓ Done</td></tr>
+    <tr><td>TODO 2 — book a room</td><td><code>POST /api/bookings</code> via the <code>api</code> instance (token attached); navigates to <code>/bookings</code>; shows server <code>message</code> on error; never sends <code>bookedBy</code></td><td class="ok">✓ Done</td></tr>
+    <tr><td>TODO 3 — edit</td><td>With an <code>id</code>, loads <code>GET /api/bookings/:id</code>, converts ISO dates to <code>YYYY-MM-DD</code>, submits <code>PATCH</code>; shows the 403 message</td><td class="ok">✓ Done</td></tr>
+    <tr><td>Fix — reload on protected pages</td><td><code>ProtectedRoute</code> now waits for <code>loading</code>, so reloading <code>/bookings/new</code> or <code>/bookings/:id</code> no longer redirects to Login</td><td class="ok">✓ Fixed</td></tr>
+  </table></div>
+
+  <h2>Browser checks (real React UI)</h2>
+  <div class="wrap"><table>
+    <tr><th>Scenario</th><th>Observed result</th><th>Status</th></tr>
+    <tr><td>Register a test user</td><td>Logged in, redirected to Bookings</td><td class="ok">✓ Pass</td></tr>
+    <tr><td>Open <code>/bookings/new</code> directly (page reload)</td><td>Form shown, session kept</td><td class="ok">✓ Pass</td></tr>
+    <tr><td>End date before start date</td><td>Shows <code>"endDate" must be greater than "ref:startDate"</code> (400)</td><td class="ok">✓ Pass</td></tr>
+    <tr><td>Valid booking</td><td>Saved, redirected to <code>/bookings</code>, new card listed</td><td class="ok">✓ Pass</td></tr>
+    <tr><td>Overlapping range for the same room</td><td>Shows <code>Room already booked for that time range</code> (409)</td><td class="ok">✓ Pass</td></tr>
+    <tr><td>Open own booking for editing</td><td>Heading “Edit Booking”, fields pre-filled, dates shown as <code>2026-12-10</code> / <code>2026-12-14</code></td><td class="ok">✓ Pass</td></tr>
+    <tr><td>Change end date and save</td><td>PATCH saved (<code>2026-12-15</code>), redirected</td><td class="ok">✓ Pass</td></tr>
+    <tr><td>Save someone else’s booking</td><td>Shows <code>You can only edit your own bookings</code> (403)</td><td class="ok">✓ Pass</td></tr>
+    <tr><td>Page layout vs <code>docs/book-a-room.png</code></td><td>Matches (screenshot below)</td><td class="ok">✓ Pass</td></tr>
+  </table></div>
+
+  <h2>API checks</h2>
+  <div class="wrap"><table>
+    <tr><th>Check</th><th>Response</th><th>Status</th></tr>
+    <tr><td>Register user A / user B</td><td>201 / 201</td><td class="ok">✓ Pass</td></tr>
+    <tr><td>Login returns token</td><td>200</td><td class="ok">✓ Pass</td></tr>
+    <tr><td><code>GET /auth/me</code> with token</td><td>200</td><td class="ok">✓ Pass</td></tr>
+    <tr><td>Create booking without token</td><td>401</td><td class="ok">✓ Pass</td></tr>
+    <tr><td><code>POST /bookings</code></td><td>201</td><td class="ok">✓ Pass</td></tr>
+    <tr><td>End before start</td><td>400</td><td class="ok">✓ Pass</td></tr>
+    <tr><td>Overlapping range</td><td>409</td><td class="ok">✓ Pass</td></tr>
+    <tr><td>Body contains <code>bookedBy</code></td><td>400 <code>"bookedBy" is not allowed</code></td><td class="ok">✓ Pass</td></tr>
+    <tr><td><code>GET /bookings/:id</code></td><td>200, <code>2026-12-10T00:00:00.000Z</code></td><td class="ok">✓ Pass</td></tr>
+    <tr><td>ISO → <code>YYYY-MM-DD</code></td><td><code>2026-12-10</code></td><td class="ok">✓ Pass</td></tr>
+    <tr><td><code>PATCH</code> by owner</td><td>200</td><td class="ok">✓ Pass</td></tr>
+    <tr><td><code>PATCH</code> by another user</td><td>403</td><td class="ok">✓ Pass</td></tr>
+    <tr><td><code>GET /bookings</code> lists booking</td><td>200</td><td class="ok">✓ Pass</td></tr>
+    <tr><td>Cancel own booking</td><td>200</td><td class="ok">✓ Pass</td></tr>
+  </table></div>
+
+  <h2>Finished page</h2>
+  <figure>
+    <img src="book-a-room-result.jpg" alt="New Booking form filled with room B2-104, 12–14 Oct 2026, purpose Group study for the ACL milestone">
+    <figcaption>Live screenshot of <code>/bookings/new</code> with the README example values.</figcaption>
+  </figure>
+
+  <h2>How to run</h2>
+  <ul>
+    <li><code>npm run install:all</code> then <code>npm run dev</code></li>
+    <li><code>server/.env</code> created with <code>PORT</code>, <code>MONGO_URI</code>, a random 64-hex <code>JWT_SECRET</code> and <code>JWT_EXPIRES_IN=7d</code> (gitignored)</li>
+    <li>Open <code>http://localhost:5175</code>, register, then use “Book a Room”</li>
+  </ul>
+  <p class="sub">All test users and bookings created during verification were deleted from the shared database.</p>
+</main>
+</body>
+</html>
