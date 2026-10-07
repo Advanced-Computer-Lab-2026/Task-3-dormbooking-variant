@@ -2,44 +2,127 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api'
 
-// TODO: build the Book a Room page — see README.md "Your task".
-// This page is already routed at /bookings/new (book) and /bookings/:id (edit),
-// and both routes are wrapped in <ProtectedRoute>.
-
 const defaults = { roomNumber: '', startDate: '', endDate: '', purpose: '' }
+
+function dateForInput(date) {
+  return date ? date.slice(0, 10) : ''
+}
 
 export default function BookingForm() {
   const nav = useNavigate()
   const { id } = useParams()
   const [form, setForm] = useState(defaults)
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(Boolean(id))
 
-  // TODO (edit mode): when there is an `id`, load the booking and fill the form.
   useEffect(() => {
-    if (!id) return
-    // TODO
+    if (!id) {
+      setForm(defaults)
+      setLoading(false)
+      return
+    }
+
+    setLoading(true)
+    setError('')
+    api.get('/bookings/' + id)
+      .then(res => {
+        const booking = res.data.booking
+        setForm({
+          roomNumber: booking.roomNumber || '',
+          startDate: dateForInput(booking.startDate),
+          endDate: dateForInput(booking.endDate),
+          purpose: booking.purpose || ''
+        })
+      })
+      .catch(err => {
+        setError(err?.response?.data?.message || 'Failed to load booking')
+      })
+      .finally(() => setLoading(false))
   }, [id])
 
-  // TODO: update `form` when an input changes.
   function onChange(e) {
-    // TODO
+    const { name, value } = e.target
+    setForm(prev => ({ ...prev, [name]: value }))
   }
 
-  // TODO: POST a new booking, or PATCH the existing one when editing,
-  // then go back to /bookings. Show the server's error message on failure.
   async function onSubmit(e) {
     e.preventDefault()
     setError('')
-    // TODO
+
+    try {
+      const payload = {
+        roomNumber: form.roomNumber,
+        startDate: form.startDate,
+        endDate: form.endDate,
+        purpose: form.purpose
+      }
+
+      if (id) {
+        await api.patch('/bookings/' + id, payload)
+      } else {
+        await api.post('/bookings', payload)
+      }
+
+      nav('/bookings')
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Booking failed')
+    }
   }
+
+  if (loading) return <div className="text-sm text-zinc-600">Loading booking...</div>
 
   return (
     <div className="max-w-lg mx-auto card">
-      <h1 className="text-xl font-semibold mb-4">{id ? 'Edit' : 'New'} Booking</h1>
+      <h1 className="text-xl font-semibold mb-4">{id ? 'Editing a Booking' : 'Booking a Room'}</h1>
       <form onSubmit={onSubmit} className="space-y-3">
-        {/* TODO: room number input, start/end date inputs and purpose textarea */}
+        <label className="block text-sm font-medium">
+          Room number
+          <input
+            className="input mt-1"
+            name="roomNumber"
+            value={form.roomNumber}
+            onChange={onChange}
+            required
+          />
+        </label>
+
+        <label className="block text-sm font-medium">
+          Start date
+          <input
+            className="input mt-1"
+            type="date"
+            name="startDate"
+            value={form.startDate}
+            onChange={onChange}
+            required
+          />
+        </label>
+
+        <label className="block text-sm font-medium">
+          End date
+          <input
+            className="input mt-1"
+            type="date"
+            name="endDate"
+            value={form.endDate}
+            onChange={onChange}
+            required
+          />
+        </label>
+
+        <label className="block text-sm font-medium">
+          Purpose (optional)
+          <textarea
+            className="input mt-1"
+            name="purpose"
+            value={form.purpose}
+            onChange={onChange}
+            rows="3"
+          />
+        </label>
+
         {error && <div className="text-red-600 text-sm">{error}</div>}
-        <button className="btn" type="submit">Save</button>
+        <button className="btn" type="submit">{id ? 'Update Booking' : 'Book Room'}</button>
       </form>
     </div>
   )
